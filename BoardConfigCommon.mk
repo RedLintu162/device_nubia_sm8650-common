@@ -4,10 +4,49 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# Configure updatable_apex.mk
+$(call inherit-product, $(SRC_TARGET_DIR)/product/updatable_apex.mk)
+
+# Enable project quotas and casefolding for emulated storage without sdcardfs
+$(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
+
+# Setup dalvik vm configs
+$(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
+
+# Soong namespaces
+PRODUCT_SOONG_NAMESPACES += \
+    $(LOCAL_PATH) \
+    hardware/nubia
+
+# A/B
+ENABLE_AB := true
+ENABLE_VIRTUAL_AB := true
+
+$(call inherit-product, $(SRC_TARGET_DIR)/product/generic_ramdisk.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/android_u_baseline.mk)
+
+PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD := gz
+
+AB_OTA_POSTINSTALL_CONFIG += \
+    RUN_POSTINSTALL_system=true \
+    POSTINSTALL_PATH_system=system/bin/otapreopt_script \
+    FILESYSTEM_TYPE_system=ext4 \
+    POSTINSTALL_OPTIONAL_system=true
+
+AB_OTA_POSTINSTALL_CONFIG += \
+    RUN_POSTINSTALL_vendor=true \
+    POSTINSTALL_PATH_vendor=bin/checkpoint_gc \
+    FILESYSTEM_TYPE_vendor=ext4 \
+    POSTINSTALL_OPTIONAL_vendor=true
+
+PRODUCT_PACKAGES += \
+    checkpoint_gc \
+    otapreopt_script
+
 BUILD_BROKEN_DUP_RULES := true
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
 
-COMMON_PATH := device/oneplus/sm8650-common
+COMMON_PATH := device/nubia/sm8650-common
 
 # A/B
 AB_OTA_UPDATER := true
@@ -28,6 +67,30 @@ AB_OTA_PARTITIONS += \
     vendor \
     vendor_boot \
     vendor_dlkm
+
+# Partitions
+PRODUCT_USE_DYNAMIC_PARTITIONS := true
+
+# QTI components
+TARGET_COMMON_QTI_COMPONENTS := \
+    adreno \
+    alarm \
+    audio \
+    av \
+    bt \
+    charging \
+    display \
+    gps \
+    init \
+    overlay \
+    perf \
+    telephony \
+    usb \
+    wfd \
+    wlan
+
+TARGET_USE_AIDL_QTI_BT_AUDIO := true
+TARGET_USE_AIDL_QTI_HEALTH := true
 
 # ANT+
 BOARD_ANT_WIRELESS_DEVICE := "qualcomm-hidl"
@@ -124,7 +187,7 @@ BOARD_KERNEL_IMAGE_NAME := Image
 KERNEL_LTO := none
 
 TARGET_FORCE_PREBUILT_KERNEL := true
-TARGET_KERNEL_SOURCE := kernel/oneplus/sm8650
+TARGET_KERNEL_SOURCE := kernel/nubia/sm8650
 TARGET_KERNEL_CONFIG := \
     gki_defconfig \
 #    vendor/pineapple_GKI.config \
@@ -294,6 +357,3 @@ WIFI_DRIVER_STATE_ON := "ON"
 WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
 WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
 WPA_SUPPLICANT_VERSION := VER_0_8_X
-
-# Include the proprietary files BoardConfig.
-include vendor/oneplus/sm8650-common/BoardConfigVendor.mk
